@@ -26,7 +26,7 @@ For me at least, "Synth" provides a more native feel when it comes to developing
 
 ## Authors
 
-- [Me lol](https://www.github.com/IndoJunnie)
+- [Me lol](https://www.github.com/jun-ro)
 
 
 ## Contributing
