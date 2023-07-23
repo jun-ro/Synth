@@ -2,65 +2,47 @@
 -- Author: Junnie#0072
 -- License: MIT
 
-local EventHandling = {}
+local EventHandler = {}
 
-local eventsList = {}
-
-function EventHandling.new(proxy, config)
-	local self = setmetatable({}, { __index = EventHandling })
-	self.proxy = proxy or nil
+function EventHandler.new(config: {})
+	local self = setmetatable({}, {__index = EventHandler})
 	self.config = config
 	return self
 end
 
-function EventHandling:SetProxyEvent(proxy)
-	self.proxy = proxy
+function EventHandler:GetConfig()
+	print(self.config)
+	return self.config
 end
 
-function EventHandling:CreateEvent(name)
-	local event = Instance.new('RemoteEvent')
-	event.Name = name
-	self.proxy:FireServer(event.Name, true)
-	table.insert(eventsList, event.Name)
-	return event.Name
-end
+function EventHandler:CreateEvent(callback: string)
+	local EndpointFolder = self.config.Parent:WaitForChild(self.config.Name)
 
-function EventHandling:Emit(event, ...)
-	
-	local endPointName = self.config:WaitForChild('Endpoint').Value
-	
-	local endPointFolder = game.ReplicatedStorage:WaitForChild(endPointName)
-	
-	if endPointFolder then
-		endPointFolder = game.ReplicatedStorage[endPointName]
-	else
-		print("Idk what happened, api folder not working 🤔")
+	local function createUniqueEventId()
+		local id
+		repeat
+			id = math.random(1, 10000)
+		until not EndpointFolder:FindFirstChild(tostring(id))
+		return tostring(id)
 	end
+
+	local eventId = createUniqueEventId()
+	self.config.Proxy:FireServer(eventId, false, callback)
 	
-	endPointFolder:WaitForChild(event):FireServer(...)
+	return eventId
+end
+
+function EventHandler:EmitSignal(id: string, ...)
+	local EndpointFolder = self.config.Parent:WaitForChild(self.config.Name)
+	task.wait(0.1)
+	local ActivatedEvent = EndpointFolder[tostring(id)]
+	ActivatedEvent:FireServer(...)
 	
 end
 
-function EventHandling:GetEvents()
-	return eventsList
+function EventHandler:CloseConnection(id)
+	self.config['Proxy']:FireServer(id, true)
 end
 
-function EventHandling.CheckEvent(name)
-	if game.ReplicatedStorage:WaitForChild('Endpoints'):FindFirstChild(name) then
-		return true
-	else
-		return false
-	end
-end
 
-function EventHandling:RemoveEvent(eventName)
-	for i, name in ipairs(eventsList) do
-		if name == eventName then
-			table.remove(eventsList, i)
-			self.proxy:FireServer(eventName, false)
-			break
-		end
-	end
-end
-
-return EventHandling
+return EventHandler
